@@ -38,6 +38,8 @@ declare global {
   }
 }
 
+const CHECKOUT_URL = "http://lynk.id/radhit000/4904760m4q7v/checkout";
+
 export default function App() {
   const [assets, setAssets] = useState<{
     product: string | null;
@@ -54,6 +56,8 @@ export default function App() {
   const [script, setScript] = useState("");
   const [productPrompt, setProductPrompt] = useState("");
   const [isPro, setIsPro] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState<GenerationStyle>(GENERATION_STYLES[0]);
   const [recommendations, setRecommendations] = useState<string[]>([]);
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
@@ -62,6 +66,27 @@ export default function App() {
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
   const [selectedRecImage, setSelectedRecImage] = useState<string | null>(null);
   const [showProModal, setShowProModal] = useState(false);
+
+  const handleUpgrade = () => {
+    window.open(CHECKOUT_URL, '_blank');
+    setShowProModal(true);
+  };
+
+  const handleVerifyPro = async () => {
+    setIsVerifying(true);
+    // Simulate a payment verification check
+    // In a real app, this would call an API to check the transaction status
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    if (verificationCode.toUpperCase() === "PRO2026") {
+      setIsPro(true);
+      setShowProModal(false);
+      setVerificationCode("");
+    } else {
+      alert("Verification failed. Please ensure you have completed the payment and entered the correct transaction ID or code.");
+    }
+    setIsVerifying(false);
+  };
 
   const handleFileUpload = (type: keyof typeof assets, file: File) => {
     const reader = new FileReader();
@@ -104,8 +129,13 @@ export default function App() {
       return;
     }
 
-    const hasKey = await window.aistudio.hasSelectedApiKey();
-    if (!hasKey) {
+    if (!script) {
+      alert("Please enter a script for the voiceover first.");
+      return;
+    }
+
+    const hasKey = window.aistudio ? await window.aistudio.hasSelectedApiKey() : true;
+    if (!hasKey && window.aistudio) {
       await window.aistudio.openSelectKey();
     }
 
@@ -131,7 +161,7 @@ export default function App() {
       setGeneratedAudioUrl(audioUrl);
     } catch (error: any) {
       console.error("Error generating video:", error);
-      if (error.message?.includes("Requested entity was not found")) {
+      if (error.message?.includes("Requested entity was not found") && window.aistudio) {
         await window.aistudio.openSelectKey();
       }
     } finally {
@@ -181,16 +211,16 @@ export default function App() {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 glass-card border-b border-white/5 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-brand-primary neo-brutal-border flex items-center justify-center">
+          <div className="w-10 h-10 bg-brand-primary rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(0,255,0,0.5)]">
             <Zap className="w-6 h-6 fill-black text-black" />
           </div>
-          <span className="text-xl font-display font-bold uppercase tracking-tighter text-white">AffiliateVideo AI</span>
+          <span className="text-xl font-display font-bold uppercase tracking-tighter text-white title-glow">AffiliateVideo AI</span>
         </div>
         <div className="flex items-center gap-4">
           {!isPro ? (
             <button 
-              onClick={() => setIsPro(true)}
-              className="neo-brutal-button bg-white text-black text-sm py-2"
+              onClick={() => setShowProModal(true)}
+              className="bg-white text-black text-sm py-2 px-6 font-bold rounded-full hover:scale-105 transition-all shadow-lg"
             >
               Register to Pro
             </button>
@@ -205,9 +235,9 @@ export default function App() {
 
       <main className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Left Column: Multi-Upload & Config */}
-        <div className="lg:col-span-5 space-y-8">
+        <div className="lg:col-span-5 space-y-10">
           <section>
-            <h2 className="text-3xl font-display font-bold mb-2">1. Upload Assets</h2>
+            <h2 className="section-title">1. Upload Assets</h2>
             <p className="text-white/40 mb-6">Upload all elements for your ad concept.</p>
             
             <div className="grid grid-cols-2 gap-4">
@@ -219,49 +249,49 @@ export default function App() {
           </section>
 
           <section>
-            <h2 className="text-3xl font-display font-bold mb-2">2. Product Concept</h2>
-            <p className="text-white/40 mb-6">Describe your product and the desired concept for better results.</p>
+            <h2 className="section-title">2. Product Concept</h2>
+            <p className="text-white/40 mb-6 text-sm">Describe your product and the desired concept for better results.</p>
             <textarea
               value={productPrompt}
               onChange={(e) => setProductPrompt(e.target.value)}
               placeholder="e.g. This is a premium organic skincare bottle. I want it to look refreshing, surrounded by water splashes and natural leaves to emphasize its organic nature."
-              className="w-full h-32 bg-brand-card border border-white/10 rounded-xl p-4 text-sm focus:border-brand-primary outline-none transition-all resize-none"
+              className="w-full h-32 bg-brand-card border border-white/5 rounded-2xl p-4 text-sm focus:border-brand-primary/50 outline-none transition-all resize-none shadow-inner"
             />
           </section>
 
           <section>
-            <h2 className="text-3xl font-display font-bold mb-2">3. Script & Voice</h2>
-            <p className="text-white/40 mb-6">Write what the model should say in the video.</p>
+            <h2 className="section-title">3. Script & Voice</h2>
+            <p className="text-white/40 mb-6 text-sm">Write what the model should say in the video.</p>
             <textarea
               value={script}
               onChange={(e) => setScript(e.target.value)}
               placeholder="e.g. This new product is a game changer! Check the link in bio to get yours today with 20% off."
-              className="w-full h-32 bg-brand-card border border-white/10 rounded-xl p-4 text-sm focus:border-brand-primary outline-none transition-all resize-none"
+              className="w-full h-32 bg-brand-card border border-white/5 rounded-2xl p-4 text-sm focus:border-brand-primary/50 outline-none transition-all resize-none shadow-inner"
             />
           </section>
 
           <section>
-            <h2 className="text-3xl font-display font-bold mb-2">4. Choose Style</h2>
-            <p className="text-white/40 mb-6">Select the visual aesthetic for your promotion.</p>
+            <h2 className="section-title">4. Choose Style</h2>
+            <p className="text-white/40 mb-6 text-sm">Select the visual aesthetic for your promotion.</p>
             <div className="grid grid-cols-1 gap-3">
               {GENERATION_STYLES.map((style) => (
                 <button
                   key={style.id}
                   onClick={() => setSelectedStyle(style)}
                   className={cn(
-                    "w-full text-left p-4 rounded-xl border transition-all flex items-center justify-between group",
+                    "w-full text-left p-4 rounded-2xl border transition-all flex items-center justify-between group",
                     selectedStyle.id === style.id 
-                      ? "bg-brand-primary text-black border-brand-primary shadow-lg" 
-                      : "bg-brand-card border-white/5 hover:border-brand-primary/50"
+                      ? "bg-brand-primary/10 border-brand-primary/50 shadow-[0_0_20px_rgba(0,255,0,0.05)]" 
+                      : "bg-brand-card border-white/5 hover:border-white/10"
                   )}
                 >
                   <div>
-                    <p className={cn("font-bold", selectedStyle.id === style.id ? "text-black" : "text-white")}>{style.name}</p>
-                    <p className={cn("text-xs", selectedStyle.id === style.id ? "text-black/60" : "text-white/40")}>
+                    <p className={cn("font-bold", selectedStyle.id === style.id ? "text-brand-primary" : "text-white")}>{style.name}</p>
+                    <p className={cn("text-xs", selectedStyle.id === style.id ? "text-brand-primary/60" : "text-white/40")}>
                       {style.description}
                     </p>
                   </div>
-                  <ChevronRight className={cn("w-5 h-5 transition-transform", selectedStyle.id === style.id ? "translate-x-1 text-black" : "opacity-0 group-hover:opacity-100")} />
+                  <ChevronRight className={cn("w-5 h-5 transition-transform", selectedStyle.id === style.id ? "translate-x-1 text-brand-primary" : "opacity-0 group-hover:opacity-100")} />
                 </button>
               ))}
             </div>
@@ -270,7 +300,7 @@ export default function App() {
           <button
             onClick={handleGenerateRecommendations}
             disabled={!assets.product || isGeneratingImages}
-            className="w-full neo-brutal-button flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full glow-button py-4 rounded-2xl flex items-center justify-center gap-2"
           >
             {isGeneratingImages ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -285,9 +315,9 @@ export default function App() {
         <div className="lg:col-span-7 space-y-12">
           <section className="min-h-[400px]">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-display font-bold">5. Concept Options</h2>
+              <h2 className="section-title">5. Concept Options</h2>
               {recommendations.length > 0 && (
-                <span className="text-xs font-bold uppercase bg-white/5 px-3 py-1 rounded-full text-white/60">
+                <span className="text-xs font-bold uppercase bg-brand-primary/10 px-3 py-1 rounded-full text-brand-primary">
                   Select an Option
                 </span>
               )}
@@ -355,15 +385,15 @@ export default function App() {
           <section className="pt-12 border-t border-white/5">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-3xl font-display font-bold">6. Final Production</h2>
-                <p className="text-white/40">Generate video with AI voiceover.</p>
+                <h2 className="section-title">6. Final Production</h2>
+                <p className="text-white/40 text-sm">Generate video with AI voiceover.</p>
               </div>
               <button
                 onClick={handleCreateVideo}
                 disabled={isGeneratingVideo || (!assets.product && !selectedRecImage)}
                 className={cn(
-                  "neo-brutal-button flex items-center gap-2",
-                  !isPro && "bg-slate-800 border-slate-700 text-white/40 shadow-none"
+                  "glow-button py-3 px-8 rounded-xl flex items-center gap-2",
+                  !isPro && "bg-white/5 text-white/20 shadow-none grayscale"
                 )}
               >
                 {isGeneratingVideo ? (
@@ -437,7 +467,7 @@ export default function App() {
                     <h3 className="text-xl font-bold mb-2">Unlock Pro Features</h3>
                     <p className="text-sm text-white/60 mb-4">Get access to AI Video, Voiceover, and high-resolution exports.</p>
                     <button 
-                      onClick={() => setShowProModal(true)}
+                      onClick={handleUpgrade}
                       className="w-full py-3 bg-brand-primary text-black font-bold rounded-xl hover:scale-[1.02] transition-transform"
                     >
                       Upgrade Now
@@ -473,6 +503,31 @@ export default function App() {
               <h3 className="text-3xl font-display font-bold text-center mb-2 text-white">Upgrade to Pro</h3>
               <p className="text-center text-white/60 mb-8">Unlock AI Video generation and create high-converting ads in seconds.</p>
               
+              {!isPro && (
+                <div className="mb-8 p-4 bg-white/5 rounded-2xl border border-white/10">
+                  <p className="text-xs font-bold uppercase text-brand-primary mb-3">Already Paid?</p>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      placeholder="Enter Verification Code"
+                      className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-brand-primary"
+                    />
+                    <button 
+                      onClick={handleVerifyPro}
+                      disabled={isVerifying || !verificationCode}
+                      className="bg-brand-primary text-black px-4 py-2 rounded-lg font-bold text-sm disabled:opacity-50"
+                    >
+                      {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify"}
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-white/40 mt-2 italic">
+                    * Use code "PRO2026" for demo purposes or check your email after payment.
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-4 mb-8">
                 {[
                   "Unlimited AI Video Generations",
@@ -491,11 +546,8 @@ export default function App() {
               </div>
 
               <button 
-                onClick={() => {
-                  setIsPro(true);
-                  setShowProModal(false);
-                }}
-                className="w-full neo-brutal-button flex items-center justify-center gap-2"
+                onClick={handleUpgrade}
+                className="w-full glow-button py-4 rounded-2xl flex items-center justify-center gap-2"
               >
                 Get Pro Access Now <ArrowRight className="w-5 h-5" />
               </button>

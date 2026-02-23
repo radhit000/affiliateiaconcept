@@ -155,8 +155,8 @@ export async function generateTTS(script: string, voice: string = 'Kore') {
 
 export async function generateVideo(imageBase64: string, prompt: string) {
   // Veo requires user-provided API key
-  const apiKey = process.env.API_KEY; 
-  const ai = new GoogleGenAI({ apiKey });
+  const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY; 
+  const ai = new GoogleGenAI({ apiKey: apiKey! });
 
   let operation = await ai.models.generateVideos({
     model: VIDEO_MODEL,
