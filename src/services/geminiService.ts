@@ -2,9 +2,12 @@ import { GoogleGenAI, Type, GenerateContentResponse, Modality, ThinkingLevel } f
 
 // We'll initialize this dynamically to ensure we use the latest API key
 const getAI = () => {
-  const apiKey = process.env.GEMINI_API_KEY;
+  // Try process.env (mapped by Vite define) or import.meta.env
+  const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+  
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not set");
+    console.error("API Key Error: GEMINI_API_KEY is missing.");
+    throw new Error("API Key tidak ditemukan. Pastikan Anda telah menambahkan GEMINI_API_KEY di Environment Variables Vercel.");
   }
   return new GoogleGenAI({ apiKey });
 };
@@ -155,8 +158,13 @@ export async function generateTTS(script: string, voice: string = 'Kore') {
 
 export async function generateVideo(imageBase64: string, prompt: string) {
   // Veo requires user-provided API key
-  const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY; 
-  const ai = new GoogleGenAI({ apiKey: apiKey! });
+  const apiKey = process.env.API_KEY || (import.meta as any).env?.VITE_API_KEY || process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY; 
+  
+  if (!apiKey) {
+    throw new Error("API Key untuk Video tidak ditemukan.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
 
   let operation = await ai.models.generateVideos({
     model: VIDEO_MODEL,

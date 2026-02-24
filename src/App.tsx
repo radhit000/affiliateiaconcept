@@ -116,8 +116,9 @@ export default function App() {
       );
       setRecommendations(images);
       if (images.length > 0) setSelectedRecImage(images[0]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating recommendations:", error);
+      alert(error.message || "Gagal menghasilkan konsep. Silakan periksa koneksi atau API Key Anda.");
     } finally {
       setIsGeneratingImages(false);
     }
